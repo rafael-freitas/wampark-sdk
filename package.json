@@ -1,6 +1,6 @@
 {
   "name": "wampark-sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Acelerador de criação de aplicações de microservices usando wampark",
   "main": "cli.js",
   "type": "module",
