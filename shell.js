@@ -6,7 +6,10 @@ import simpleGit from 'simple-git';
 import { randomBytes } from 'crypto';
 
 const git = simpleGit();
-const connectionsFilePath = path.join(process.cwd(), '.connections');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const connectionsFilePath = path.join(__dirname, '.connections');
+
 
 async function loadConnections() {
   if (await fs.pathExists(connectionsFilePath)) {
