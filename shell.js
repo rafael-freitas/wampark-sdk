@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import axios from 'axios';
 import simpleGit from 'simple-git';
-import { randomBytes } from 'crypto';
+import { fileURLToPath } from 'url';
 
 const git = simpleGit();
 const __filename = fileURLToPath(import.meta.url);
