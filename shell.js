@@ -185,7 +185,7 @@ async function addContainer() {
                            .replaceAll('WAMP_AUTHPASS_PLACEHOLDER', envConfig.WAMP_AUTHPASS)
                            .replaceAll('HTTP_PORT_PLACEHOLDER', containerPort)
                            .replaceAll('HTTP_HOST_PLACEHOLDER', answers.CONTAINER_HOST)
-                           .replaceAll('DB_URI_PLACEHOLDER', `${answers.CONTAINER_DB_URI}/${answers.CONTAINER_NAME}`)
+                           .replaceAll('DB_URI_PLACEHOLDER', `${answers.CONTAINER_DB_URI}`)
                            .replaceAll('GATEWAY_URL_PLACEHOLDER', `http://${conn.host}:${conn.port}`)
                            .replaceAll('GATEWAY_SECRET_KEY_PLACEHOLDER', conn.secretKey)
                            .replaceAll('CONTAINER_ID_PLACEHOLDER', containerId);
