@@ -153,6 +153,7 @@ async function addContainer() {
   const containerResponse = await axios.post(`http://${conn.host}:${conn.port}/containers`, {
     name: answers.CONTAINER_NAME,
     path: answers.CONTAINER_PATH,
+    staticPath: answers.CONTAINER_STATIC_PATH,
     port: containerPort,
     host: answers.CONTAINER_HOST,
     proxyEnabled: answers.CONTAINER_PROXY_ENABLED
