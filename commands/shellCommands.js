@@ -30,6 +30,13 @@ export async function listContainers(conn) {
   });
 }
 
+async function getTenants(conn) {
+  const response = await axios.get(`http://${conn.host}:${conn.port}/tenant`, {
+    headers: { 'X-SECRET-KEY': conn.secretKey },
+  });
+  return response.data.dataset;
+}
+
 export async function addContainer(conn) {
   const envConfig = await getEnvConfig(conn);
   const dbUriBase = envConfig.DB_URI.split('/').slice(0, 3).join('/');
