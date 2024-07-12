@@ -1,102 +1,53 @@
+// cli.js
 import { Command } from 'commander';
-import { startShell } from './shell.js';
-import inquirer from 'inquirer';
-import simpleGit from 'simple-git';
-import fs from 'fs-extra';
-import { randomBytes } from 'crypto';
-import path from 'path';
-import dotenv from 'dotenv';
+import { startShell } from './commands/shell.js';
+import { helpCommand } from './commands/help.js';
+import { createCommand } from './commands/create.js';
+import { listGateways } from './commands/gw/ls.js';
+import { addGateway } from './commands/gw/add.js';
+import { deleteGateway } from './commands/gw/del.js';
 
 const program = new Command();
-const git = simpleGit();
-
-const header = `
- _______ _______  ______      _______ ______  _     _
-    |    |_____| |  ____      |______ |     \\ |____/ 
-    |    |     | |_____|      ______| |_____/ |    \\_
-
-Application SDK for accelerate development
-`;
-
-console.log(header);
 
 program
   .version('1.0.0')
   .description('CLI para acelerar a geração de código para aplicações utilizando wampark');
 
 program
-  .command('create <appName>')
-  .description('Criar uma aplicação no diretório atual')
-  .action(async (appName) => {
-    const questions = [
-      { name: 'HTTP_PORT', message: 'Gateway port:', default: 5001 },
-      { name: 'HTTP_HOST', message: 'Gateway host:', default: 'localhost' },
-      { name: 'DB_NAME', message: 'Gateway database name:', default: `${appName}_gateway` },
-      { name: 'DB_URI', message: 'MongoDB connection string:', default: 'mongodb://localhost:27017' },
-      { name: 'WAMP_URL', message: 'Crossbar.io URL:', default: 'ws://localhost:9001/ws' },
-      { name: 'WAMP_REALM', message: 'Crossbar.io REALM:', default: 'realm1' },
-      { name: 'WAMP_AUTHID', message: 'Crossbar.io AUTHID:' },
-      { name: 'WAMP_AUTHPASS', message: 'Crossbar.io AUTHPASS:' },
-    ];
-
-    const answers = await inquirer.prompt(questions);
-
-    // Clonar o repositório de templates
-    const repoUrl = 'https://github.com/rafael-freitas/wampark-sdk-templates';
-    const tempDir = path.join(process.cwd(), '.dktmp');
-    await git.clone(repoUrl, tempDir);
-
-    // Copiar templates/application para /myApp
-    const appDir = path.join(process.cwd(), appName);
-    await fs.copy(path.join(tempDir, 'application'), appDir);
-
-    // Copiar template de gateway para /myApp/gateway
-    const gatewayTemplateDir = path.join(tempDir, 'gateway');
-    const gatewayDir = path.join(appDir, 'gateway');
-    await fs.copy(gatewayTemplateDir, gatewayDir);
-
-    // Copiar e modificar o arquivo .env do template gateway
-    const envTemplatePath = path.join(gatewayTemplateDir, '.env');
-    const envFilePath = path.join(gatewayDir, '.env.development');
-    
-    if (await fs.pathExists(envTemplatePath)) {
-      let envContent = await fs.readFile(envTemplatePath, 'utf-8');
-      
-      // Gerar SECRET_KEY
-      const secretKey = randomBytes(32).toString('hex');
-      
-      // Substituir variáveis pelos valores fornecidos
-      envContent = envContent.replaceAll('WAMP_URL_PLACEHOLDER', answers.WAMP_URL)
-                             .replaceAll('WAMP_REALM_PLACEHOLDER', answers.WAMP_REALM)
-                             .replaceAll('WAMP_AUTHID_PLACEHOLDER', answers.WAMP_AUTHID)
-                             .replaceAll('WAMP_AUTHPASS_PLACEHOLDER', answers.WAMP_AUTHPASS)
-                             .replaceAll('HTTP_PORT_PLACEHOLDER', answers.HTTP_PORT)
-                             .replaceAll('HTTP_HOST_PLACEHOLDER', answers.HTTP_HOST)
-                             .replaceAll('DB_URI_PLACEHOLDER', `${answers.DB_URI}/${answers.DB_NAME}`)
-                             .replaceAll('SECRET_KEY_PLACEHOLDER', secretKey);
-
-      await fs.outputFile(envFilePath, envContent);
-    }
-
-    // Remover o diretório temporário
-    await fs.remove(tempDir);
-    // remover .env
-    await fs.remove(envTemplatePath);
-
-    console.log(`Aplicação ${appName} criada com sucesso!`);
-  });
+  .command('help')
+  .description('Exibe o help')
+  .action(helpCommand);
 
 program
-  .command('sh')
-  .description('Entrar no modo shell para gerenciamento de containers')
-  .action(async () => {
-    await startShell();
-  });
+  .command('create <appName>')
+  .description('Criar uma aplicação no diretório atual')
+  .action(createCommand);
+
+const gw = program.command('gw').description('Gerenciamento de gateways');
+
+gw
+  .command('ls')
+  .description('Lista as conexões configuradas')
+  .action(listGateways);
+
+gw
+  .command('add')
+  .description('Adiciona uma conexão para um gateway')
+  .requiredOption('-h, --host <host>', 'Gateway host')
+  .requiredOption('-p, --port <port>', 'Gateway port')
+  .requiredOption('-k, --secretKey <secretKey>', 'Gateway secret key')
+  .action((options) => addGateway(options));
+
+gw
+  .command('del')
+  .description('Remove a conexão para o gateway de host <host> e porta <port>')
+  .requiredOption('-h, --host <host>', 'Gateway host')
+  .requiredOption('-p, --port <port>', 'Gateway port')
+  .action((options) => deleteGateway(options));
+
+program
+  .command('sh [port] [host]')
+  .description('Acessa o shell para o gateway de porta <port> e host [host]')
+  .action((port = '5001', host = 'localhost') => startShell(port, host));
 
 program.parse(process.argv);
-
-program.on('--help', () => {
-  console.log('Comandos disponíveis:');
-  console.log('  create <appName>    - Criar uma aplicação no diretório atual');
-  console.log('  sh                  - Entrar no modo shell para gerenciamento de containers');
-});

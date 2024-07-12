@@ -8,7 +8,9 @@
     "dk": "./bin/dk"
   },
   "scripts": {
-    "start": "node cli.js"
+    "start": "node cli.js",
+    "start-i": "node --inspect=0.0.0.0:9400 cli.js",
+    "start-b": "node --inspect-brk=0.0.0.0:9400 cli.js"
   },
   "repository": {
     "type": "git",
